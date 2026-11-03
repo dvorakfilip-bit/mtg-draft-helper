@@ -15,7 +15,7 @@ Cílový uživatel: zatím jen autor (osobní použití). Případná veřejná 
 ## 2. Rozsah
 
 ### V rozsahu první verze (MVP)
-- Všechny limited formáty v Areně: Premier Draft, Quick Draft, Traditional Draft, Sealed, Traditional Sealed, Cube a speciální eventy (u formátů bez dat 17Lands omezená kvalita doporučení, viz 5.4).
+- Všechny limited formáty v Areně: Premier Draft, Quick Draft, Traditional Draft, Pick-Two Draft (2 karty na pick, 4 hráči), Sealed, Traditional Sealed, Cube a speciální eventy (u formátů bez dat 17Lands omezená kvalita doporučení, viz 5.4).
 - Doporučení picků s hodnocením 0–100 (100 = nejlepší).
 - Doporučení balíčku po draftu / pro Sealed pool.
 - Postranní overlay panel přes hru.
@@ -55,12 +55,16 @@ Pozn.: Přesný formát zpráv se převezme z open-source parserů (17Lands `mtg
 - Doplňková klasifikace rolí karet (removal, combat trick, card draw, mana fixing, evasion) – heuristicky z textu karty, později případně ručně upravitelné.
 
 ### 4.3 Data 17Lands
-- Stahovat hodnocení karet pro konkrétní edici a formát (endpoint `card_ratings/data`) a statistiky barevných kombinací (`color_ratings/data`).
-- Ukládat lokálně do cache, obnovovat max. 1× denně nebo na vyžádání. Žádné dotazy při každém picku.
-- Použité metriky: GIH WR, OH WR, GD WR, IWD, ALSA, ATA, počty her (kvůli spolehlivosti).
-- Statistiky karet i v rozpadu podle barevných kombinací (WR karty v konkrétním archetypu), pokud je 17Lands poskytuje.
-- Volitelný filtr skupiny hráčů (všichni / top hráči), výchozí „všichni“.
-- Uvádět 17Lands jako zdroj dat v UI.
+- **Zdroj: pouze veřejné datasety 17Lands** ([public_datasets](https://www.17lands.com/public_datasets), licence CC BY 4.0). API webu 17Lands se nepoužívá, protože jeho použití mimo 17lands.com 17Lands nepovoluje (viz `docs/M0-pruzkum.md`).
+- Soubory pro edici a formát:
+  - `game_data_public.<SET>.<FORMAT>.csv.gz` (jedna hra na řádek): GIH WR, OH WR, GD WR, GP WR, IWD, WR podle barevné kombinace, WR karty v archetypu.
+  - `draft_data_public.<SET>.<FORMAT>.csv.gz` (jeden pick na řádek): ALSA, ATA.
+  - `cards.csv`: mapa ID → jméno karty.
+- Aplikace soubory stáhne, zpracuje proudově (bez načítání celého souboru do paměti) a výsledné statistiky uloží do lokální SQLite. Při draftu se nic nestahuje.
+- Kontrola nové verze datasetu (hlavička `Last-Modified`) max. 1× denně nebo na vyžádání. Při změně přepočet na pozadí.
+- Filtr skupiny hráčů (všichni / top hráči) podle sloupce `user_game_win_rate_bucket`, výchozí „všichni“. Statistiky se předpočítají pro obě skupiny.
+- Uvádět „Data: 17Lands“ s odkazem viditelně v UI, ne skrytě. Uvedení nesmí naznačovat podporu ze strany 17Lands.
+- Omezení zdroje: datasety vycházejí cca 2–3 týdny po vydání edice a nepravidelně se aktualizují; ne pro všechny formáty existují (např. Quick Draft).
 
 ### 4.4 Výpočet skóre picku (0–100)
 Skóre se skládá z několika složek. Váhy budou nastavitelné a odladí se na skutečných draftech.
@@ -70,7 +74,7 @@ Skóre se skládá z několika složek. Váhy budou nastavitelné a odladí se n
 3. **Archetyp:** pokud mám jasnou barevnou dvojici, zohlednit WR karty v tomto archetypu a sílu archetypu samotného.
 4. **Potřeby balíčku:** bonus za roli, která v poolu chybí (removal, creatures na nízké křivce, 2-drops), postih za přebytek (např. 6. drahá karta).
 5. **Signály:** pokud chodí pozdě silné karty jedné barvy (pick vs. ALSA), zvýhodnit tuto barvu v rané fázi.
-   - **Quick Draft (boti):** boti draftují konzistentně a nic neberou naschvál, signály jsou proto spolehlivější. Váha signálů je vyšší a uplatňuje se déle do draftu. Pro ALSA/ATA se použijí data přímo z Quick Draftu, protože odrážejí chování botů.
+   - **Quick Draft (boti):** boti draftují konzistentně a nic neberou naschvál, signály jsou proto spolehlivější. Váha signálů je vyšší a uplatňuje se déle do draftu. Pro ALSA/ATA se použijí data přímo z Quick Draftu, protože odrážejí chování botů. Pokud dataset Quick Draftu neexistuje, použije se Premier Draft a signály se v Quick Draftu nezvýhodňují tolik.
    - **Draft s lidmi:** signály mají nižší váhu, hlavně v P1 a začátku P2.
 
 U každé karty zobrazit krátké zdůvodnění (1–2 hlavní faktory).
@@ -108,11 +112,11 @@ Požadavek na hru: Arena v režimu okno nebo bezrámečkové okno (overlay nefun
 
 ### 5.3 Soulad s pravidly
 - Pouze čtení logu Areny a vlastních souborů hry. Žádné čtení paměti procesu, žádná automatizace kliků ani zásahy do klienta.
-- Respektovat 17Lands (cache, nízká frekvence dotazů, uvedení zdroje).
+- 17Lands: používat jen veřejné datasety (CC BY 4.0), neposílat dotazy na API webu, viditelně uvádět zdroj.
 
 ### 5.4 Formáty bez dat
-- Pokud 17Lands nemá data pro daný formát, použít data jiného formátu téže edice (např. Premier místo Traditional).
-- Pokud nejsou žádná data (Cube, speciální eventy, úplně nová edice), zobrazit upozornění a skórovat jen podle heuristik (rarita, role, mana cost, soulad s barvami) se sníženou spolehlivostí.
+- Pokud pro daný formát neexistuje dataset, použít dataset jiného formátu téže edice (pořadí: Premier → Traditional → Sealed; pro Sealed opačně).
+- Pokud nejsou žádná data (Cube, speciální eventy, první 2–3 týdny nové edice), zobrazit upozornění a skórovat jen podle heuristik (rarita, role, mana cost, soulad s barvami) se sníženou spolehlivostí.
 
 ## 6. Technické řešení
 
@@ -135,7 +139,8 @@ Požadavek na hru: Arena v režimu okno nebo bezrámečkové okno (overlay nefun
 
 | Riziko | Dopad | Opatření |
 |---|---|---|
-| 17Lands nemá oficiální API, endpoint se může změnit nebo omezit | Bez aktuálních dat | Cache, oddělený `RatingsProvider`, záloha přes veřejné datasety 17Lands |
+| Veřejné datasety vycházejí se zpožděním a nepravidelně | Na začátku edice bez dat | Heuristiky, upozornění v UI, záložní formát |
+| Změna struktury nebo umístění datasetů | Nenačtou se statistiky | Oddělený `RatingsProvider`, kontrola hlaviček CSV, poslední platná data zůstávají v cache |
 | WotC změní formát logu | Parser přestane fungovat | Izolovaný parser, testy, rychlá oprava |
 | Málo dat na začátku nové edice | Nepřesné skóre | Vyhlazení, zobrazení spolehlivosti |
 | Chybí ukázkový log z vlastního draftu | Parser neověřený | Formát z open-source projektů, ověření na prvním draftu |
@@ -145,7 +150,7 @@ Požadavek na hru: Arena v režimu okno nebo bezrámečkové okno (overlay nefun
 ## 8. Milníky
 
 1. **M0 – Průzkum:** formát logu z open-source parserů, ukázková data, ověření endpointů 17Lands a databáze karet Areny.
-2. **M1 – Datová vrstva:** databáze karet, stahování a cache 17Lands.
+2. **M1 – Datová vrstva:** databáze karet, stažení a zpracování veřejných datasetů 17Lands, lokální úložiště statistik.
 3. **M2 – Parser a stav draftu:** sledování logu, události, obnova stavu, testy.
 4. **M3 – Doporučení picků a overlay:** skóre, draftový panel.
 5. **M4 – Doporučení balíčku:** DeckBuilder, panel balíčku.

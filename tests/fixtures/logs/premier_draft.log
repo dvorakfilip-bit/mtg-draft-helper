@@ -1,0 +1,24 @@
+DETAILED LOGS: ENABLED
+[UnityCrossThreadLogger]==> EventJoin {"id":"00000000-0000-0000-0000-000000000101","request":"{\"EventName\":\"PremierDraft_FRA_20260929\",\"EntryCurrencyType\":\"Gem\",\"EntryCurrencyPaid\":1500,\"CustomTokenId\":null,\"EventChoice\":\"\",\"DebugIgnoreEntryLimits\":false}"}
+[UnityCrossThreadLogger]03.11.2026 18:00:01
+<== EventJoin(00000000-0000-0000-0000-000000000101)
+{"Course":{"CourseId":"00000000-0000-0000-0000-0000000000c1","InternalEventName":"PremierDraft_FRA_20260929","CurrentModule":"Draft","ModulePayload":"","CardPool":[],"CardPoolByCollation":[],"CardStyles":[]}}
+[UnityCrossThreadLogger]Draft.Notify {"draftId":"00000000-0000-0000-0000-0000000000d1","SelfPick":1,"SelfPack":1,"PackCards":"106225,106226,106227,106229,106230,106231,106232,106233,106234,106235,106236,106237,106238,106239"}
+[UnityCrossThreadLogger]==> EventPlayerDraftMakePick {"id":"00000000-0000-0000-0000-000000000102","request":"{\"DraftId\":\"00000000-0000-0000-0000-0000000000d1\",\"GrpId\":0,\"GrpIds\":[106230],\"Pack\":1,\"Pick\":1}"}
+[UnityCrossThreadLogger]03.11.2026 18:00:12
+<== EventPlayerDraftMakePick(00000000-0000-0000-0000-000000000102)
+{}
+[UnityCrossThreadLogger]Draft.Notify {"draftId":"00000000-0000-0000-0000-0000000000d1","SelfPick":2,"SelfPack":1,"PackCards":"106240,106241,106242,106243,106244,106245,106246,106247,106248,106249,106250,106251,106252"}
+[UnityCrossThreadLogger]==> EventPlayerDraftMakePick {"id":"00000000-0000-0000-0000-000000000103","request":"{\"DraftId\":\"00000000-0000-0000-0000-0000000000d1\",\"GrpId\":0,\"GrpIds\":[106249],\"Pack\":1,\"Pick\":2}"}
+[UnityCrossThreadLogger]03.11.2026 18:00:25
+<== EventPlayerDraftMakePick(00000000-0000-0000-0000-000000000103)
+{}
+[UnityCrossThreadLogger]Draft.Notify {"draftId":"00000000-0000-0000-0000-0000000000d1","SelfPick":3,"SelfPack":1,"PackCards":"106253,106255,106256,106257,106258,106259,106260,106261,106262,106263,106264,106265"}
+[UnityCrossThreadLogger]==> EventPlayerDraftMakePick {"id":"00000000-0000-0000-0000-000000000104","request":"{\"DraftId\":\"00000000-0000-0000-0000-0000000000d1\",\"GrpId\":0,\"GrpIds\":[106264],\"Pack\":1,\"Pick\":3}"}
+[UnityCrossThreadLogger]03.11.2026 18:00:39
+<== EventPlayerDraftMakePick(00000000-0000-0000-0000-000000000104)
+{}
+[UnityCrossThreadLogger]03.11.2026 18:25:00
+<== DraftCompleteDraft(00000000-0000-0000-0000-000000000105)
+{"CourseId":"00000000-0000-0000-0000-0000000000c1","InternalEventName":"PremierDraft_FRA_20260929","DraftId":"00000000-0000-0000-0000-0000000000d1","CardPool":[106230,106249,106264]}
+[UnityCrossThreadLogger]==> EventSetDeckV3 {"id":"00000000-0000-0000-0000-000000000106","request":"{\"EventName\":\"PremierDraft_FRA_20260929\",\"Summary\":{\"DeckId\":\"00000000-0000-0000-0000-0000000000e1\",\"Name\":\"Draft Deck\"},\"Deck\":{\"MainDeck\":[{\"cardId\":106230,\"quantity\":1},{\"cardId\":106249,\"quantity\":1}],\"Sideboard\":[{\"cardId\":106264,\"quantity\":1}],\"CommandZone\":[],\"Companions\":[],\"CardSkins\":[]}}"}

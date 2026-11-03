@@ -1,0 +1,17 @@
+DETAILED LOGS: ENABLED
+[UnityCrossThreadLogger]==> EventJoin {"id":"00000000-0000-0000-0000-000000000201","request":"{\"EventName\":\"QuickDraft_FRA_20261017\",\"EntryCurrencyType\":\"Gold\",\"EntryCurrencyPaid\":5000,\"CustomTokenId\":null,\"EventChoice\":\"\",\"DebugIgnoreEntryLimits\":false}"}
+[UnityCrossThreadLogger]03.11.2026 19:00:01
+<== EventJoin(00000000-0000-0000-0000-000000000201)
+{"Course":{"CourseId":"00000000-0000-0000-0000-0000000000c2","InternalEventName":"QuickDraft_FRA_20261017","CurrentModule":"BotDraft","ModulePayload":"","CardPool":[],"CardPoolByCollation":[],"CardStyles":[]}}
+[UnityCrossThreadLogger]==> BotDraftDraftStatus {"id":"00000000-0000-0000-0000-000000000202","request":"{\"EventName\":\"QuickDraft_FRA_20261017\"}"}
+[UnityCrossThreadLogger]03.11.2026 19:00:02
+<== BotDraftDraftStatus(00000000-0000-0000-0000-000000000202)
+{"CurrentModule":"BotDraft","Payload":"{\"Result\":\"Success\",\"EventName\":\"QuickDraft_FRA_20261017\",\"DraftStatus\":\"PickNext\",\"PackNumber\":0,\"PickNumber\":0,\"NumCardsToPick\":1,\"DraftPack\":[\"106225\",\"106226\",\"106227\",\"106229\",\"106230\",\"106231\",\"106232\",\"106233\",\"106234\",\"106235\",\"106236\",\"106237\",\"106238\",\"106239\"],\"PackStyles\":[],\"PickedCards\":[],\"PickedStyles\":[]}","DTO_InventoryInfo":{}}
+[UnityCrossThreadLogger]==> BotDraftDraftPick {"id":"00000000-0000-0000-0000-000000000203","request":"{\"EventName\":\"QuickDraft_FRA_20261017\",\"PickInfo\":{\"EventName\":\"QuickDraft_FRA_20261017\",\"CardIds\":[\"106238\"],\"PackNumber\":0,\"PickNumber\":0}}"}
+[UnityCrossThreadLogger]03.11.2026 19:00:15
+<== BotDraftDraftPick(00000000-0000-0000-0000-000000000203)
+{"CurrentModule":"BotDraft","Payload":"{\"Result\":\"Success\",\"EventName\":\"QuickDraft_FRA_20261017\",\"DraftStatus\":\"PickNext\",\"PackNumber\":0,\"PickNumber\":1,\"NumCardsToPick\":1,\"DraftPack\":[\"106240\",\"106241\",\"106242\",\"106243\",\"106244\",\"106245\",\"106246\",\"106247\",\"106248\",\"106249\",\"106250\",\"106251\",\"106252\"],\"PackStyles\":[],\"PickedCards\":[\"106238\"],\"PickedStyles\":[]}","DTO_InventoryInfo":{}}
+[UnityCrossThreadLogger]==> BotDraftDraftPick {"id":"00000000-0000-0000-0000-000000000204","request":"{\"EventName\":\"QuickDraft_FRA_20261017\",\"PickInfo\":{\"EventName\":\"QuickDraft_FRA_20261017\",\"CardIds\":[\"106242\"],\"PackNumber\":0,\"PickNumber\":1}}"}
+[UnityCrossThreadLogger]03.11.2026 19:00:31
+<== BotDraftDraftPick(00000000-0000-0000-0000-000000000204)
+{"CurrentModule":"BotDraft","Payload":"{\"Result\":\"Success\",\"EventName\":\"QuickDraft_FRA_20261017\",\"DraftStatus\":\"PickNext\",\"PackNumber\":0,\"PickNumber\":2,\"NumCardsToPick\":1,\"DraftPack\":[\"106253\",\"106255\",\"106256\",\"106257\",\"106258\",\"106259\",\"106260\",\"106261\",\"106262\",\"106263\",\"106264\",\"106265\"],\"PackStyles\":[],\"PickedCards\":[\"106238\",\"106242\"],\"PickedStyles\":[]}","DTO_InventoryInfo":{}}
