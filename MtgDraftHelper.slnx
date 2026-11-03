@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MtgDraftHelper.Cli/MtgDraftHelper.Cli.csproj" />
+    <Project Path="src/MtgDraftHelper.Core/MtgDraftHelper.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MtgDraftHelper.Core.Tests/MtgDraftHelper.Core.Tests.csproj" />
+  </Folder>
+</Solution>
