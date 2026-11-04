@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Smart App Control blokuje nepodepsané .exe; aplikace se spouští přes "dotnet <projekt>.dll". -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+</Project>

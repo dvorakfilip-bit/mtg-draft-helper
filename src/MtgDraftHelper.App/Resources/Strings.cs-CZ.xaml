@@ -1,0 +1,65 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <!-- Texty UI v češtině. Pro další jazyk stačí přidat stejný slovník s jinými hodnotami. -->
+
+    <sys:String x:Key="App.Title">MtG Draft Helper</sys:String>
+    <sys:String x:Key="Tab.Draft">Draft</sys:String>
+    <sys:String x:Key="Tab.Pool">Pool</sys:String>
+    <sys:String x:Key="Tab.Deck">Balíček</sys:String>
+    <sys:String x:Key="Button.Minimize">Sbalit</sys:String>
+    <sys:String x:Key="Button.Close">Zavřít</sys:String>
+
+    <sys:String x:Key="Header.Card">Karta</sys:String>
+    <sys:String x:Key="Header.Score">Skóre</sys:String>
+    <sys:String x:Key="Header.Gih">GIH WR</sys:String>
+    <sys:String x:Key="Header.Alsa">ALSA</sys:String>
+    <sys:String x:Key="Header.Colors">Barvy</sys:String>
+    <sys:String x:Key="Header.Curve">Křivka</sys:String>
+    <sys:String x:Key="Header.Signals">Signály</sys:String>
+
+    <sys:String x:Key="Deck.Placeholder">Doporučení balíčku přijde v další verzi (M4).</sys:String>
+
+    <sys:String x:Key="Status.LoadingCards">Načítám databázi karet Areny…</sys:String>
+    <sys:String x:Key="Status.CardsMissing">Databáze karet Areny nebyla nalezena. Je MTG Arena nainstalovaná?</sys:String>
+    <sys:String x:Key="Status.WaitingForDraft">Čekám na draft nebo Sealed v MTG Arena…</sys:String>
+    <sys:String x:Key="Status.DetailedLogsOff">V Areně nejsou zapnuté detailní logy: Options → Account → Detailed Logs (Plugin Support), pak Arenu restartuj.</sys:String>
+    <sys:String x:Key="Status.DownloadingData">Stahuji a zpracovávám data 17Lands ({0} {1}), může to trvat několik minut…</sys:String>
+    <sys:String x:Key="Status.NoData">Pro {0} nejsou data 17Lands – skóre je jen odhad.</sys:String>
+    <sys:String x:Key="Status.DataError">Data 17Lands se nepodařilo stáhnout: {0}</sys:String>
+    <sys:String x:Key="Status.FallbackFormat">Data z formátu {0} (pro {1} nejsou)</sys:String>
+
+    <sys:String x:Key="Phase.Joined">čeká se na první balíček</sys:String>
+    <sys:String x:Key="Phase.Drafting">draft</sys:String>
+    <sys:String x:Key="Phase.DeckBuilding">skládání balíčku</sys:String>
+    <sys:String x:Key="Phase.Playing">hraje se</sys:String>
+    <sys:String x:Key="Phase.Complete">event skončil</sys:String>
+
+    <sys:String x:Key="Info.Pick">Pick {0}/{1} (P{2}p{3})</sys:String>
+    <sys:String x:Key="Info.PoolCounts">Pool {0} · creatures {1} · removal {2}</sys:String>
+    <sys:String x:Key="Info.WaitingForPack">Čekám na další balíček…</sys:String>
+
+    <sys:String x:Key="Reason.NoData">bez dat 17Lands (odhad)</sys:String>
+    <sys:String x:Key="Reason.OffColor">mimo tvé barvy</sys:String>
+    <sys:String x:Key="Reason.ArchetypeGood">silná v {0}</sys:String>
+    <sys:String x:Key="Reason.ArchetypeBad">slabší v {0}</sys:String>
+    <sys:String x:Key="Reason.NeedCreatures">chybí ti creatures</sys:String>
+    <sys:String x:Key="Reason.NeedRemoval">chybí ti removal</sys:String>
+    <sys:String x:Key="Reason.NeedTwoDrops">chybí 2-dropy</sys:String>
+    <sys:String x:Key="Reason.TooManyExpensive">hodně drahých karet</sys:String>
+    <sys:String x:Key="Reason.SignalOpen">signál: {0} je otevřená</sys:String>
+    <sys:String x:Key="Reason.SignalClosed">{0} se zdá zavřená</sys:String>
+    <sys:String x:Key="Reason.Removal">removal</sys:String>
+
+    <sys:String x:Key="Color.W">bílá</sys:String>
+    <sys:String x:Key="Color.U">modrá</sys:String>
+    <sys:String x:Key="Color.B">černá</sys:String>
+    <sys:String x:Key="Color.R">červená</sys:String>
+    <sys:String x:Key="Color.G">zelená</sys:String>
+
+    <sys:String x:Key="Pool.Multicolor">Vícebarevné</sys:String>
+    <sys:String x:Key="Pool.Colorless">Bezbarvé</sys:String>
+    <sys:String x:Key="Pool.Lands">Země</sys:String>
+
+    <sys:String x:Key="Footer.Data">Data: 17Lands</sys:String>
+</ResourceDictionary>

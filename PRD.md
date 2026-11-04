@@ -133,7 +133,7 @@ Požadavek na hru: Arena v režimu okno nebo bezrámečkové okno (overlay nefun
 - **Lokální úložiště:** SQLite v `%LOCALAPPDATA%\MtgDraftHelper\` (cache 17Lands, nastavení, historie draftů).
 - **Historie draftů:** ukládat každý draft (formát, edice, datum, každý pick včetně nabízených karet a skóre, výsledný balíček). Slouží k pozdějšímu ladění vah skóre a analýzám.
 - **Testy:** xUnit; parser a doporučování testované na ukázkových logech a pevných datech.
-- **Distribuce (osobní):** jeden spustitelný soubor (self-contained publish).
+- **Spouštění (osobní použití):** Smart App Control ve Windows blokuje nepodepsané `.exe`. Projekty se proto sestavují bez `.exe` (`UseAppHost=false`) a aplikace se spouští přes podepsaný `dotnet.exe` (`dotnet MtgDraftHelper.App.dll`) zástupcem na ploše. Okno konzole se při startu skryje. Podepsání certifikátem se řeší až při veřejné distribuci.
 
 ## 7. Závislosti a rizika
 

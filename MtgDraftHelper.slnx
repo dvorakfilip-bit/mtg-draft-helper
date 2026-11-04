@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/MtgDraftHelper.App/MtgDraftHelper.App.csproj" />
     <Project Path="src/MtgDraftHelper.Cli/MtgDraftHelper.Cli.csproj" />
     <Project Path="src/MtgDraftHelper.Core/MtgDraftHelper.Core.csproj" />
   </Folder>
