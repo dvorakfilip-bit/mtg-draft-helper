@@ -10,6 +10,7 @@ public partial class OverlayWindow : Window
     public OverlayWindow()
     {
         InitializeComponent();
+        ShowActivated = false;
 
         // Výchozí pozice: pravý okraj pracovní plochy, aby panel nezakrýval balíček v Areně.
         var area = SystemParameters.WorkArea;
@@ -17,6 +18,31 @@ public partial class OverlayWindow : Window
         Left = area.Right - Width - 12;
         Top = area.Top + 20;
     }
+
+    /// <summary>Uživatel klikl na ozubené kolo.</summary>
+    public event Action? SettingsRequested;
+
+    /// <summary>Obnoví uloženou pozici, pokud je okno aspoň částečně na některé obrazovce.</summary>
+    public void RestorePlacement(Core.Settings.WindowPlacement? placement)
+    {
+        if (placement is null)
+            return;
+        var screen = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
+            SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
+        var rect = new Rect(placement.Left, placement.Top, Math.Max(MinWidth, placement.Width), Math.Max(MinHeight, placement.Height));
+        var visible = Rect.Intersect(screen, rect);
+        if (visible.IsEmpty || visible.Width < 80 || visible.Height < 40)
+            return;
+
+        Left = rect.Left;
+        Top = rect.Top;
+        Width = rect.Width;
+        Height = rect.Height;
+    }
+
+    public Core.Settings.WindowPlacement CurrentPlacement => new(Left, Top, Width, Height);
+
+    private void Settings_Click(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke();
 
     private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

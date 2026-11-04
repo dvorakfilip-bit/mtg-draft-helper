@@ -134,6 +134,7 @@ Požadavek na hru: Arena v režimu okno nebo bezrámečkové okno (overlay nefun
 - **Historie draftů:** ukládat každý draft (formát, edice, datum, každý pick včetně nabízených karet a skóre, výsledný balíček). Slouží k pozdějšímu ladění vah skóre a analýzám.
 - **Testy:** xUnit; parser a doporučování testované na ukázkových logech a pevných datech.
 - **Spouštění (osobní použití):** Smart App Control ve Windows blokuje nepodepsané `.exe`. Projekty se proto sestavují bez `.exe` (`UseAppHost=false`) a aplikace se spouští přes podepsaný `dotnet.exe` (`dotnet MtgDraftHelper.App.dll`) zástupcem na ploše. Okno konzole se při startu skryje. Podepsání certifikátem se řeší až při veřejné distribuci.
+  - **Zjištění M5:** Smart App Control posuzuje i jednotlivé nepodepsané `.dll` podle cloudové reputace a některá sestavení zablokuje (Release `MtgDraftHelper.Core.dll` zablokován, Debug ne). Spouštění přes `dotnet.exe` proto není spolehlivé. Instalační skript aplikaci po sestavení zkušebně spustí. Trvalé řešení (podpis / vypnutí Smart App Control) je otevřená otázka.
 
 ## 7. Závislosti a rizika
 

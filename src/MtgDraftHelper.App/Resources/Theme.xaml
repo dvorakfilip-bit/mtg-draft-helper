@@ -22,18 +22,20 @@
     <SolidColorBrush x:Key="ManaG" Color="#FF4FAE5A" />
     <SolidColorBrush x:Key="ManaC" Color="#FFB0B0B0" />
 
-    <Style TargetType="TextBlock">
+    <!-- Implicitní styl TextBlocku je jen v overlayi (OverlayWindow.Resources); na úrovni aplikace
+         by přebarvil i texty ve standardních tlačítkách a výběrech okna nastavení. -->
+    <Style x:Key="BaseText" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="FontSize" Value="12" />
     </Style>
 
-    <Style x:Key="MutedText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+    <Style x:Key="MutedText" TargetType="TextBlock" BasedOn="{StaticResource BaseText}">
         <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
 
-    <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+    <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource BaseText}">
         <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
         <Setter Property="FontSize" Value="10" />
         <Setter Property="FontWeight" Value="SemiBold" />

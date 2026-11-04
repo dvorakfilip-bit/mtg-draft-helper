@@ -45,6 +45,20 @@ public sealed class MainViewModel : ObservableObject
     private string _dataInfo = "";
     private int _selectedTab;
 
+    private double _windowOpacity = 1;
+    private bool _clickThrough;
+    private string _clickThroughInfo = "";
+    private bool _showGihWr = true;
+    private bool _showAlsa = true;
+    private bool _showReasons = true;
+
+    public double WindowOpacity { get => _windowOpacity; set => Set(ref _windowOpacity, value); }
+    public bool ClickThrough { get => _clickThrough; set => Set(ref _clickThrough, value); }
+    public string ClickThroughInfo { get => _clickThroughInfo; set => Set(ref _clickThroughInfo, value); }
+    public bool ShowGihWr { get => _showGihWr; set => Set(ref _showGihWr, value); }
+    public bool ShowAlsa { get => _showAlsa; set => Set(ref _showAlsa, value); }
+    public bool ShowReasons { get => _showReasons; set => Set(ref _showReasons, value); }
+
     public string Status { get => _status; set => Set(ref _status, value); }
     public bool HasWarning { get => _hasWarning; set => Set(ref _hasWarning, value); }
     public string EventTitle { get => _eventTitle; set => Set(ref _eventTitle, value); }

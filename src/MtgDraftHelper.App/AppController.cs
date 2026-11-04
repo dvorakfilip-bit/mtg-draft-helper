@@ -7,6 +7,7 @@ using MtgDraftHelper.Core.DeckBuilding;
 using MtgDraftHelper.Core.Logs;
 using MtgDraftHelper.Core.Ratings;
 using MtgDraftHelper.Core.Recommendation;
+using MtgDraftHelper.Core.Settings;
 using MtgDraftHelper.Core.Storage;
 
 namespace MtgDraftHelper.App;
@@ -19,12 +20,16 @@ public sealed class AppController : IDisposable
 {
     private readonly MainViewModel _viewModel;
     private readonly Dispatcher _dispatcher;
-    private readonly string _logPath;
+    private readonly string? _logPathOverride;
     private readonly RatingsService _ratingsService;
     private readonly SemaphoreSlim _ratingsLock = new(1, 1);
+    private readonly object _monitorLock = new();
 
+    private volatile AppSettings _settings;
     private ArenaCardDatabase? _cards;
+    private Func<string, EventInfo>? _parseEvent;
     private LogMonitor? _monitor;
+    private string? _monitoredPath;
     private DraftSnapshot? _lastSnapshot;
 
     // Hodnocení pro aktuální edici a formát; klíč "SET|Format eventu".
@@ -33,13 +38,16 @@ public sealed class AppController : IDisposable
     private string? _ratingsFormat;
     private string? _dataStatus;
 
-    public AppController(MainViewModel viewModel, Dispatcher dispatcher, string? logPath)
+    public AppController(MainViewModel viewModel, Dispatcher dispatcher, AppSettings settings, string? logPathOverride)
     {
         _viewModel = viewModel;
         _dispatcher = dispatcher;
-        _logPath = logPath ?? ArenaPaths.PlayerLogPath;
+        _settings = settings;
+        _logPathOverride = logPathOverride;
         _ratingsService = new RatingsService(new StatsStore(AppPaths.StatsDatabase), new PublicDatasetClient(), AppPaths.DatasetCacheDir);
     }
+
+    private string LogPath => _logPathOverride ?? _settings.LogPath ?? ArenaPaths.PlayerLogPath;
 
     public void Start() => Task.Run(Initialize);
 
@@ -56,10 +64,83 @@ public sealed class AppController : IDisposable
         }
 
         var sets = _cards.All.Select(c => c.SetCode).Where(s => s.Length > 0).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        _monitor = new LogMonitor(_logPath, name => EventInfo.Parse(name, sets));
-        _monitor.StateChanged += OnStateChanged;
-        _monitor.Start();
-        OnStateChanged(_monitor.Snapshot);
+        _parseEvent = name => EventInfo.Parse(name, sets);
+        StartMonitor();
+    }
+
+    /// <summary>Spustí (nebo po změně cesty znovu spustí) sledování logu.</summary>
+    private void StartMonitor()
+    {
+        LogMonitor monitor;
+        lock (_monitorLock)
+        {
+            if (_parseEvent is null || (_monitor is not null && _monitoredPath == LogPath))
+                return;
+            _monitor?.Dispose();
+            _monitoredPath = LogPath;
+            _monitor = monitor = new LogMonitor(_monitoredPath, _parseEvent);
+            _monitor.StateChanged += snapshot =>
+            {
+                if (ReferenceEquals(_monitor, monitor))
+                    OnStateChanged(snapshot);
+            };
+        }
+        monitor.Start();
+        OnStateChanged(monitor.Snapshot);
+    }
+
+    /// <summary>Použije nové nastavení: cestu k logu, skupinu hráčů a váhy skóre.</summary>
+    public void ApplySettings(AppSettings settings)
+    {
+        var groupChanged = settings.PlayerGroup != _settings.PlayerGroup;
+        _settings = settings;
+        Task.Run(() =>
+        {
+            StartMonitor();
+            if (groupChanged)
+                _ratingsKey = null; // hodnocení se načtou znovu pro novou skupinu
+            if (_lastSnapshot is { } snapshot)
+                OnStateChanged(snapshot);
+        });
+    }
+
+    /// <summary>Popis dat použitých pro aktuální event (pro okno nastavení).</summary>
+    public string CurrentDataInfo()
+    {
+        if (_ratings is not { } ratings)
+            return "–";
+        var info = _ratingsService.Store.GetDatasetInfo(ratings.SetCode, ratings.Format, DatasetKind.Game);
+        var group = Texts.Get(_settings.PlayerGroup == PlayerGroup.Top ? "Settings.GroupTop" : "Settings.GroupAll");
+        return $"{ratings.SetCode} {ratings.Format}, {group}"
+               + (info?.LastModified is { } modified ? $", verze {modified.LocalDateTime:d}" : "");
+    }
+
+    /// <summary>Ruční kontrola nové verze datasetu pro aktuální event.</summary>
+    public async Task<string> RefreshDataAsync()
+    {
+        var info = _lastSnapshot?.Event;
+        if (info?.SetCode is null || info.SeventeenLandsFormat is null)
+            return Texts.Get("Settings.RefreshNoEvent");
+
+        var format = _ratingsFormat ?? info.SeventeenLandsFormat;
+        IReadOnlyList<DatasetUpdateResult> results;
+        await _ratingsLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            results = await _ratingsService.UpdateAsync(info.SetCode, format).ConfigureAwait(false);
+        }
+        finally
+        {
+            _ratingsLock.Release();
+        }
+
+        if (results.Any(r => r.Status == DatasetUpdateStatus.Updated))
+        {
+            _ratingsKey = null; // načíst nově zpracovaná data
+            if (_lastSnapshot is { } snapshot)
+                OnStateChanged(snapshot);
+        }
+        return Texts.Get("Settings.RefreshDone", string.Join(", ", results.Select(r => $"{r.Kind}: {r.Status}")));
     }
 
     private void OnStateChanged(DraftSnapshot snapshot)
@@ -75,7 +156,7 @@ public sealed class AppController : IDisposable
             return;
         }
 
-        var key = $"{info!.SetCode}|{info.SeventeenLandsFormat}";
+        var key = $"{info!.SetCode}|{info.SeventeenLandsFormat}|{_settings.PlayerGroup}";
         if (key != _ratingsKey)
         {
             _ratingsKey = key;
@@ -143,7 +224,7 @@ public sealed class AppController : IDisposable
             }
             else
             {
-                _ratings = new CardRatings(_ratingsService.Store, info.SetCode, usedFormat);
+                _ratings = new CardRatings(_ratingsService.Store, info.SetCode, usedFormat, _settings.PlayerGroup);
                 _ratingsFormat = usedFormat;
                 _dataStatus = usedFormat == info.SeventeenLandsFormat
                     ? null
@@ -170,7 +251,13 @@ public sealed class AppController : IDisposable
 
         var ratings = _ratings;
         ICardRatings source = (ICardRatings?)ratings ?? NoRatings.Instance;
-        var recommender = new PickRecommender(source);
+        var settings = _settings;
+        var recommender = new PickRecommender(source)
+        {
+            OffColorPenalty = settings.OffColorPenalty,
+            MaxArchetypeBonus = settings.MaxArchetypeBonus,
+            MaxSignalBonus = settings.MaxSignalBonus,
+        };
         var sameFormat = ratings is not null && _ratingsFormat == snapshot.Event?.SeventeenLandsFormat;
         var context = DraftContextFactory.Create(snapshot, _cards, sameFormat);
         var analysis = recommender.Analyze(context);
@@ -200,6 +287,7 @@ public sealed class AppController : IDisposable
 
         var dataInfo = Texts.Get("Footer.Data")
             + (ratings is not null ? $" · {ratings.SetCode} {ratings.Format}" : "")
+            + (ratings is not null && settings.PlayerGroup == PlayerGroup.Top ? " · top" : "")
             + (_dataStatus is null ? "" : $" · {_dataStatus}");
         var warning = snapshot.DetailedLogsEnabled == false;
 
