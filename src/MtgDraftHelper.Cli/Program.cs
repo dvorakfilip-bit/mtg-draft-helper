@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using MtgDraftHelper.Core;
 using MtgDraftHelper.Core.Cards;
+using MtgDraftHelper.Core.Logs;
 using MtgDraftHelper.Core.Ratings;
 using MtgDraftHelper.Core.Storage;
 
@@ -28,6 +29,10 @@ try
             return Colors(args.Skip(1).ToArray());
         case "match":
             return Match(args.Skip(1).ToArray());
+        case "log":
+            return Log(args.Skip(1).ToArray());
+        case "watch":
+            return Watch(args.Skip(1).ToArray());
         default:
             PrintUsage();
             return 1;
@@ -49,6 +54,8 @@ static void PrintUsage()
                                                karty seřazené podle GIH WR
           colors SET FORMAT [--group top]      win rate barevných kombinací
           match SET FORMAT                     kontrola párování jmen 17Lands ↔ databáze Areny
+          log [CESTA] [--events]               zpracuje celý log (výchozí Player.log) a vypíše stav draftu
+          watch [CESTA]                        sleduje log živě a vypisuje změny stavu (Ctrl+C ukončí)
         """);
 }
 
@@ -122,6 +129,101 @@ static int Colors(string[] args)
     foreach (var c in stats)
         Console.WriteLine($"{(c.Colors.Length == 0 ? "?" : c.Colors),-6} {100.0 * c.Wins / c.Games,6:N1}%  {c.Games,8:N0} her");
     return 0;
+}
+
+static (ArenaCardDatabase? Db, Func<string, EventInfo> ParseEvent) LoadCardsForLog()
+{
+    try
+    {
+        var db = ArenaCardDatabase.LoadDefault();
+        var sets = db.All.Select(c => c.SetCode).Where(s => s.Length > 0).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return (db, name => EventInfo.Parse(name, sets));
+    }
+    catch (FileNotFoundException)
+    {
+        return (null, name => EventInfo.Parse(name));
+    }
+}
+
+static int Log(string[] args)
+{
+    var path = args.FirstOrDefault(a => !a.StartsWith("--")) ?? ArenaPaths.PlayerLogPath;
+    var (db, parseEvent) = LoadCardsForLog();
+    var sw = Stopwatch.StartNew();
+
+    using var monitor = new LogMonitor(path, parseEvent);
+    var counts = new Dictionary<string, int>();
+    monitor.EventParsed += e =>
+    {
+        counts[e.GetType().Name] = counts.GetValueOrDefault(e.GetType().Name) + 1;
+        if (args.Contains("--events"))
+            Console.WriteLine($"  {Describe(e)}");
+    };
+    monitor.Error += ex => Console.Error.WriteLine($"  Chyba: {ex.Message}");
+    monitor.Poll();
+
+    Console.WriteLine($"Zpracováno za {sw.ElapsedMilliseconds} ms: {path}");
+    foreach (var (type, count) in counts.OrderBy(x => x.Key))
+        Console.WriteLine($"  {type}: {count}");
+    PrintSnapshot(monitor.Snapshot, db);
+    return 0;
+}
+
+static int Watch(string[] args)
+{
+    var path = args.FirstOrDefault() ?? ArenaPaths.PlayerLogPath;
+    var (db, parseEvent) = LoadCardsForLog();
+
+    using var monitor = new LogMonitor(path, parseEvent);
+    monitor.StateChanged += snapshot =>
+    {
+        Console.WriteLine($"--- {DateTime.Now:HH:mm:ss}");
+        PrintSnapshot(snapshot, db);
+    };
+    monitor.Error += ex => Console.Error.WriteLine($"Chyba: {ex.Message}");
+    Console.WriteLine($"Sleduji {path} (Ctrl+C ukončí)…");
+    monitor.Start();
+    PrintSnapshot(monitor.Snapshot, db);
+
+    using var exit = new ManualResetEventSlim();
+    Console.CancelKeyPress += (_, e) => { e.Cancel = true; exit.Set(); };
+    exit.Wait();
+    return 0;
+}
+
+static string Describe(LogEvent e) => e switch
+{
+    PackShown p => $"PackShown P{p.Pack}p{p.Pick} ({p.Cards.Count} karet)",
+    CardsPicked p => $"CardsPicked P{p.Pack}p{p.Pick}: {string.Join(',', p.Cards)}",
+    CoursesReceived c => $"CoursesReceived: {string.Join(", ", c.Courses.Select(x => $"{x.EventName}[{x.CurrentModule}, {x.CardPool.Count}]"))}",
+    PoolSnapshot s => $"PoolSnapshot: {s.Cards.Count} karet",
+    DraftCompleted d => $"DraftCompleted: {d.CardPool.Count} karet",
+    DeckSubmitted d => $"DeckSubmitted {d.EventName}: {d.MainDeck.Sum(c => c.Quantity)} + {d.Sideboard.Sum(c => c.Quantity)}",
+    _ => e.ToString(),
+};
+
+static void PrintSnapshot(DraftSnapshot s, ArenaCardDatabase? db)
+{
+    string Name(int id) => db?.Get(id)?.Name ?? id.ToString();
+
+    Console.WriteLine($"Detailní logy: {(s.DetailedLogsEnabled is null ? "?" : s.DetailedLogsEnabled.Value ? "zapnuté" : "VYPNUTÉ")}");
+    if (s.Event is null)
+    {
+        Console.WriteLine("Žádný rozehraný limited event.");
+        return;
+    }
+    Console.WriteLine($"Event: {s.Event.EventName} ({s.Event.Format}, edice {s.Event.SetCode ?? "?"}) – fáze {s.Phase}");
+    if (s.CurrentPack is { } pack)
+    {
+        Console.WriteLine($"Aktuální balíček P{pack.Pack}p{pack.Pick} (vybrat {pack.CardsToPick}):");
+        foreach (var id in pack.Cards)
+            Console.WriteLine($"  {Name(id)}");
+    }
+    Console.WriteLine($"Picků: {s.Picks.Count}, pool: {s.Pool.Count} karet");
+    foreach (var group in s.Pool.GroupBy(Name).OrderBy(g => g.Key).Take(60))
+        Console.WriteLine($"  {group.Count()}× {group.Key}");
+    if (s.Deck.Count > 0)
+        Console.WriteLine($"Odeslaný balíček: {s.Deck.Sum(c => c.Quantity)} karet + sideboard {s.Sideboard.Sum(c => c.Quantity)}");
 }
 
 static int Match(string[] args)
