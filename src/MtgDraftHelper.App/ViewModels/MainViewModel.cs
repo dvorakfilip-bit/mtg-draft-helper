@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
 using MtgDraftHelper.Core.Cards;
+using MtgDraftHelper.Core.DeckBuilding;
 using MtgDraftHelper.Core.Logs;
 using MtgDraftHelper.Core.Recommendation;
 
@@ -23,6 +24,14 @@ public sealed record CardRow(
     bool IsTop);
 
 public sealed record PoolGroup(string Title, IReadOnlyList<CardRow> Cards);
+
+public sealed record DeckVariantView(
+    string Title,
+    string Summary,
+    string? Archetype,
+    string? Warning,
+    IReadOnlyList<PoolGroup> Groups,
+    IReadOnlyList<string> Swaps);
 
 /// <summary>Stav overlaye pro XAML. Aktualizuje ho <see cref="AppController"/> na UI vlákně.</summary>
 public sealed class MainViewModel : ObservableObject
@@ -50,6 +59,71 @@ public sealed class MainViewModel : ObservableObject
     public ObservableCollection<CurveBar> Curve { get; } = [];
     public ObservableCollection<CardRow> PackCards { get; } = [];
     public ObservableCollection<PoolGroup> PoolGroups { get; } = [];
+    public ObservableCollection<DeckVariantView> DeckVariants { get; } = [];
+
+    private int _selectedVariant;
+    private DeckVariantView? _selectedDeck;
+
+    public int SelectedVariant
+    {
+        get => _selectedVariant;
+        set
+        {
+            if (Set(ref _selectedVariant, value))
+                SelectedDeck = value >= 0 && value < DeckVariants.Count ? DeckVariants[value] : null;
+        }
+    }
+
+    public DeckVariantView? SelectedDeck { get => _selectedDeck; private set => Set(ref _selectedDeck, value); }
+
+    public bool HasDeck => DeckVariants.Count > 0;
+
+    public void ShowDecks(IReadOnlyList<DeckVariant> variants)
+    {
+        var previous = SelectedDeck?.Title;
+        Replace(DeckVariants, variants.Select(DeckView));
+        var index = DeckVariants.ToList().FindIndex(v => v.Title == previous);
+        _selectedVariant = -1;
+        SelectedVariant = index >= 0 ? index : DeckVariants.Count > 0 ? 0 : -1;
+        if (DeckVariants.Count == 0)
+            SelectedDeck = null;
+        OnPropertyChanged(nameof(HasDeck));
+    }
+
+    private static DeckVariantView DeckView(DeckVariant v)
+    {
+        var colors = string.Join("/", PickRecommender.AllColors.Where(c => v.MainColors.HasFlag(c)).Select(Texts.ColorName));
+        var title = ManaCost.ToLetters(v.MainColors) + (v.SplashColor == ManaColors.None ? "" : "+" + ManaCost.ToLetters(v.SplashColor));
+        var summary = colors
+            + (v.SplashColor == ManaColors.None ? "" : " " + Texts.Get("Deck.Splash", Texts.ColorName(v.SplashColor)))
+            + "\n" + Texts.Get("Deck.Summary", v.Score, v.Spells.Count, v.Creatures, v.LandCount);
+
+        CardRow Row(DeckCardChoice c)
+        {
+            var score = (int)Math.Round(c.Value);
+            return new CardRow(c.Card.Name, c.Card.ManaCost, ColorBrush(c.Card.Colors), score, ScoreBrush(score), "", "", "", false);
+        }
+
+        var creatures = v.Spells.Where(s => s.Card.IsCreature).Select(Row).ToList();
+        var others = v.Spells.Where(s => !s.Card.IsCreature).Select(Row).ToList();
+        var lands = v.NonbasicLands.Select(Row)
+            .Concat(v.BasicLands.Select(b => new CardRow($"{b.Count}× {b.Name}", "", ColorBrush(b.Color), 0, ScoreBrush(0), "", "", "", false)))
+            .ToList();
+
+        return new DeckVariantView(
+            title,
+            summary,
+            v.ArchetypeWinRate is { } wr ? Texts.Get("Deck.Archetype", ManaCost.ToLetters(v.MainColors), wr) : null,
+            !v.IsComplete ? Texts.Get("Deck.Incomplete")
+                : v.Creatures < DeckBuilder.MinCreatures ? Texts.Get("Deck.FewCreatures", v.Creatures)
+                : null,
+            [
+                new PoolGroup(Texts.Get("Deck.Creatures", creatures.Count), creatures),
+                new PoolGroup(Texts.Get("Deck.Spells", others.Count), others),
+                new PoolGroup(Texts.Get("Deck.Lands", v.LandCount), lands),
+            ],
+            v.Swaps.Select(s => Texts.Get("Deck.Swap", s.Out.Card.Name, s.Out.Value, s.In.Card.Name, s.In.Value)).ToList());
+    }
 
     public void ShowIdle(string status, bool warning)
     {
@@ -64,6 +138,7 @@ public sealed class MainViewModel : ObservableObject
         Curve.Clear();
         PackCards.Clear();
         PoolGroups.Clear();
+        ShowDecks([]);
     }
 
     public void ShowDraft(
@@ -101,13 +176,13 @@ public sealed class MainViewModel : ObservableObject
         Replace(PoolGroups, PoolGroupsOf(pool, poolScore));
 
         // Záložka se přepíná sama jen při změně fáze; jinak zůstává, kterou si hráč vybral.
-        // Po draftu se ukáže Pool (Balíček přijde v M4).
+        // Po draftu a v Sealedu se ukáže Balíček.
         if (snapshot.Phase != _lastPhase)
         {
             if (snapshot.Phase == DraftPhase.Drafting)
                 SelectedTab = 0;
             else if (snapshot.Phase == DraftPhase.DeckBuilding)
-                SelectedTab = 1;
+                SelectedTab = 2;
             _lastPhase = snapshot.Phase;
         }
     }

@@ -18,7 +18,18 @@
     <sys:String x:Key="Header.Curve">Křivka</sys:String>
     <sys:String x:Key="Header.Signals">Signály</sys:String>
 
-    <sys:String x:Key="Deck.Placeholder">Doporučení balíčku přijde v další verzi (M4).</sys:String>
+    <sys:String x:Key="Deck.Empty">Balíček navrhnu, až budeš mít v poolu aspoň 15 karet.</sys:String>
+    <sys:String x:Key="Deck.Variant">{0}</sys:String>
+    <sys:String x:Key="Deck.Splash">+ splash {0}</sys:String>
+    <sys:String x:Key="Deck.Summary">Skóre {0:N0} · {1} kouzel · {2} creatures · {3} zemí</sys:String>
+    <sys:String x:Key="Deck.Archetype">Win rate archetypu {0}: {1:P1}</sys:String>
+    <sys:String x:Key="Deck.Incomplete">Pool nestačí na plný balíček – doplň kartami mimo barvy nebo dalšími zeměmi.</sys:String>
+    <sys:String x:Key="Deck.FewCreatures">Jen {0} creatures – doporučuje se 14–17.</sys:String>
+    <sys:String x:Key="Deck.Creatures">Creatures ({0})</sys:String>
+    <sys:String x:Key="Deck.Spells">Ostatní kouzla ({0})</sys:String>
+    <sys:String x:Key="Deck.Lands">Země ({0})</sys:String>
+    <sys:String x:Key="Deck.Swaps">Na hraně – zvaž výměnu</sys:String>
+    <sys:String x:Key="Deck.Swap">{0} ({1:N0}) ↔ {2} ({3:N0})</sys:String>
 
     <sys:String x:Key="Status.LoadingCards">Načítám databázi karet Areny…</sys:String>
     <sys:String x:Key="Status.CardsMissing">Databáze karet Areny nebyla nalezena. Je MTG Arena nainstalovaná?</sys:String>

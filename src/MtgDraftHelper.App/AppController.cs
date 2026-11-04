@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using MtgDraftHelper.App.ViewModels;
 using MtgDraftHelper.Core;
 using MtgDraftHelper.Core.Cards;
+using MtgDraftHelper.Core.DeckBuilding;
 using MtgDraftHelper.Core.Logs;
 using MtgDraftHelper.Core.Ratings;
 using MtgDraftHelper.Core.Recommendation;
@@ -177,6 +178,12 @@ public sealed class AppController : IDisposable
         var packCards = snapshot.CurrentPack?.Cards.Select(_cards.Get).OfType<CardInfo>().ToList() ?? [];
         var recommendations = recommender.Recommend(packCards, context, analysis);
 
+        // Návrh balíčku (záložka Balíček) – průběžně během draftu i v Sealedu.
+        var colorStats = ratings is null ? [] : ColorStatsFor(ratings);
+        IReadOnlyList<DeckVariant> decks = context.Pool.Count >= MinPoolForDeck
+            ? new DeckBuilder(source, colorStats).Build(context.Pool)
+            : [];
+
         (string Gih, string Alsa) Stats(string name)
         {
             var s = source.Stats(name);
@@ -199,10 +206,24 @@ public sealed class AppController : IDisposable
         UI(() =>
         {
             _viewModel.ShowDraft(snapshot, analysis, recommendations, context.Pool, PoolScore, Stats);
+            _viewModel.ShowDecks(decks);
             _viewModel.DataInfo = dataInfo;
             _viewModel.HasWarning = warning;
             _viewModel.Status = warning ? Texts.Get("Status.DetailedLogsOff") : "";
         });
+    }
+
+    private const int MinPoolForDeck = 15;
+
+    private (CardRatings Ratings, IReadOnlyList<ColorStats> Stats)? _colorStatsCache;
+
+    private IReadOnlyList<ColorStats> ColorStatsFor(CardRatings ratings)
+    {
+        if (_colorStatsCache is { } cache && ReferenceEquals(cache.Ratings, ratings))
+            return cache.Stats;
+        var stats = _ratingsService.Store.GetColorStats(ratings.SetCode, ratings.Format, PlayerGroup.All);
+        _colorStatsCache = (ratings, stats);
+        return stats;
     }
 
     private void UI(Action action) => _dispatcher.BeginInvoke(action);

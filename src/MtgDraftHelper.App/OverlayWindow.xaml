@@ -232,9 +232,115 @@
                     </ScrollViewer>
                 </TabItem>
 
-                <!-- Balíček (M4) -->
+                <!-- Balíček -->
                 <TabItem Header="{StaticResource Tab.Deck}">
-                    <TextBlock Text="{StaticResource Deck.Placeholder}" Style="{StaticResource MutedText}" Margin="8" TextWrapping="Wrap" />
+                    <Grid Margin="4">
+                        <TextBlock Text="{StaticResource Deck.Empty}" Style="{StaticResource MutedText}" Margin="4" TextWrapping="Wrap">
+                            <TextBlock.Visibility>
+                                <Binding Path="HasDeck" Converter="{x:Static vm:Converters.InverseBoolToVisibility}" />
+                            </TextBlock.Visibility>
+                        </TextBlock>
+                        <DockPanel Visibility="{Binding HasDeck, Converter={StaticResource BoolToVisibility}}">
+                            <!-- Výběr varianty -->
+                            <ListBox DockPanel.Dock="Top" ItemsSource="{Binding DeckVariants}" SelectedIndex="{Binding SelectedVariant}"
+                                     Background="Transparent" BorderThickness="0" Margin="0,0,0,6"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Cursor" Value="Hand" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="Chip" Padding="10,3" Margin="0,0,4,0" CornerRadius="10"
+                                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                                        <ContentPresenter />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="Chip" Property="Background" Value="{StaticResource TopRowBrush}" />
+                                                            <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:DeckVariantView}">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Detail vybrané varianty -->
+                            <StackPanel DockPanel.Dock="Top" DataContext="{Binding SelectedDeck}" Margin="0,0,0,4">
+                                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding Archetype}" Style="{StaticResource MutedText}" />
+                                <TextBlock Text="{Binding Warning}" Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap" FontSize="11" />
+                            </StackPanel>
+
+                            <ScrollViewer DataContext="{Binding SelectedDeck}">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding Groups}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:PoolGroup}">
+                                                <StackPanel Margin="0,0,0,4">
+                                                    <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" />
+                                                    <ItemsControl ItemsSource="{Binding Cards}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate DataType="{x:Type vm:CardRow}">
+                                                                <Grid Margin="0,1">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="34" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Border Background="{Binding ScoreBrush}" CornerRadius="3" Width="28" Height="17">
+                                                                        <Border.Style>
+                                                                            <Style TargetType="Border">
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding Score}" Value="0">
+                                                                                        <Setter Property="Visibility" Value="Hidden" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Border.Style>
+                                                                        <TextBlock Text="{Binding Score}" Foreground="#FF101010" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                    </Border>
+                                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0">
+                                                                        <Border Width="8" Height="8" CornerRadius="4" Background="{Binding ColorBrush}" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                                    </StackPanel>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding ManaCost}" Style="{StaticResource MutedText}" Margin="4,0" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <TextBlock Text="{StaticResource Deck.Swaps}" Style="{StaticResource SectionTitle}">
+                                        <TextBlock.Visibility>
+                                            <Binding Path="Swaps.Count" Converter="{x:Static vm:Converters.CountToVisibility}" />
+                                        </TextBlock.Visibility>
+                                    </TextBlock>
+                                    <ItemsControl ItemsSource="{Binding Swaps}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" Style="{StaticResource MutedText}" Margin="0,1" TextWrapping="Wrap" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Grid>
                 </TabItem>
             </TabControl>
         </DockPanel>
