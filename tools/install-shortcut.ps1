@@ -20,6 +20,7 @@ $shortcut.TargetPath = $dotnet
 $shortcut.Arguments = "`"$dll`" --hide-console"
 $shortcut.WorkingDirectory = $output
 $shortcut.WindowStyle = 7 # minimalizovaně – okno konzole se hned zavře
+$shortcut.IconLocation = "$(Join-Path $root 'src\MtgDraftHelper.App\Resources\app.ico'),0"
 $shortcut.Description = 'MtG Arena draft helper (data 17Lands)'
 $shortcut.Save()
 

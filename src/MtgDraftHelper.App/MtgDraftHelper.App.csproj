@@ -12,4 +12,9 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Ikona: generuje tools/make-icon.ps1. -->
+    <Resource Include="Resources\app.ico;Resources\app.png" />
+  </ItemGroup>
+
 </Project>
